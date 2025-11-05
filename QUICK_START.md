@@ -8,7 +8,7 @@ python enhance_all_audios.py
 
 That's it! This single command will:
 - ✅ Find all audio files in `original-audios/`
-- ✅ Enhance them with maximum quality (dns64 model)
+- ✅ **AI denoising** with Facebook DNS64 (best quality)
 - ✅ Preserve original sample rate (48kHz)
 - ✅ Use high bitrate encoding (256 kbps)
 - ✅ Remove clicks and pops (adeclick filter)
@@ -111,8 +111,8 @@ python enhance_all_audios.py --recursive
 
 1. **Load original audio** → Detect format and sample rate
 2. **Convert to WAV** → Store in `tmp/` folder
-3. **Denoise at 16kHz** → AI model removes background noise
-4. **Upsample to original rate** → Restore full frequency range (48kHz)
+3. **AI denoising** → Facebook DNS64 at 16kHz
+4. **Upsample to original rate** → Restore to 48kHz
 5. **Remove clicks/pops** → Apply adeclick filter
 6. **Normalize volume** → Apply loudnorm for consistent loudness
 7. **Encode with high quality** → Create final output (256 kbps)
@@ -122,15 +122,15 @@ python enhance_all_audios.py --recursive
 
 ## 🎯 Latest Test Results
 
-Successfully processed **2 files** in **3.6 seconds**:
+Successfully processed **2 files** in **~4 seconds**:
 
-| File | Original | Enhanced | Quality | Features |
-|------|----------|----------|---------|----------|
-| 47-53 page Dari 22th lesson.m4a | 0.21 MB | 0.52 MB | 48kHz, 168kbps | ✅ Full cleanup |
-| New Recording 602.m4a | 0.06 MB | 0.14 MB | 48kHz, 172kbps | ✅ Full cleanup |
+| File | Original | Enhanced | Quality | Processing |
+|------|----------|----------|---------|------------|
+| 47-53 page Dari 22th lesson.m4a | 0.21 MB | 0.53 MB | 48kHz, 170kbps | ✅ AI + Filters |
+| New Recording 602.m4a | 0.06 MB | 0.14 MB | 48kHz, 177kbps | ✅ AI + Filters |
 
 All files receive:
-- ✅ Background noise removed (AI denoising)
+- ✅ AI denoising (Facebook DNS64)
 - ✅ Clicks/pops removed (adeclick)
 - ✅ Volume normalized (loudnorm)
 - ✅ Quality preserved (48kHz)
@@ -223,20 +223,20 @@ Done! 🎵
 
 ## 📝 What's New
 
-### Latest Updates:
-1. ✅ **Original Filename** - No suffix (keeps original name)
-2. ✅ **Adeclick Filter** - Removes clicks and pops from audio
-3. ✅ **Loudness Normalization** - Consistent volume using ffmpeg loudnorm
-4. ✅ **Professional Quality** - Broadcast-ready audio output
-5. ✅ **Clean Output** - Files have same name, just cleaner audio
+### Features:
+1. ✅ **AI Denoising** - Facebook DNS64 (best quality)
+2. ✅ **Original Filename** - No suffix (keeps original name)
+3. ✅ **Adeclick Filter** - Removes clicks and pops from audio
+4. ✅ **Loudness Normalization** - Consistent volume using ffmpeg loudnorm
+5. ✅ **Professional Quality** - Broadcast-ready audio output
 
 ### Processing Pipeline:
 ```
 Original Audio (noisy, clicks, varying volume)
     ↓
-AI Denoising (remove background noise at 16kHz)
+AI Denoising (Facebook DNS64 at 16kHz)
     ↓
-Upsample (restore to 48kHz - preserve quality)
+Upsample (restore to 48kHz)
     ↓
 Adeclick (remove clicks and pops)
     ↓

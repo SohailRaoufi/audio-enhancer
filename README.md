@@ -12,7 +12,7 @@ python enhance_all_audios.py
 
 This tool provides professional-grade audio enhancement:
 
-1. **AI Denoising** - Removes background noise using Facebook Research's DNS64 model
+1. **AI Denoising** - Facebook Research's DNS64 model for speech enhancement
 2. **Click Removal** - Removes clicks and pops using adeclick filter
 3. **Volume Normalization** - Consistent loudness using loudnorm filter
 4. **Quality Preservation** - Maintains original sample rate and uses high bitrate encoding
@@ -27,7 +27,7 @@ This tool provides professional-grade audio enhancement:
 - Format: Preserved (M4A → M4A, MP3 → MP3, etc.)
 
 **Features Applied:**
-- ✅ Background noise removal (AI)
+- ✅ AI denoising (Facebook DNS64)
 - ✅ Click/pop removal (adeclick)
 - ✅ Volume normalization (loudnorm)
 - ✅ High-quality encoding
@@ -71,11 +71,12 @@ python enhance_all_audios.py --suffix _enhanced
 
 ## 🔧 Technical Details
 
-**AI Model:** Facebook Research Denoiser (DNS64)
-- Processes at 16kHz internally
-- Upsamples back to original rate
-- Trained on DNS Challenge dataset
-- Best for speech/voice recordings
+**AI Model:**
+- **Facebook DNS64** - Speech Enhancement
+  - Processes at 16kHz for speech optimization
+  - Trained on DNS Challenge dataset
+  - Specialized for speech/voice clarity
+  - Upsamples back to original rate
 
 **Audio Filters:**
 - `adeclick` - Removes clicks and pops

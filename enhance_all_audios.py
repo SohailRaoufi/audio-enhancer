@@ -15,6 +15,7 @@ import argparse
 import shutil
 import time
 from datetime import datetime
+import sys
 
 
 class AudioEnhancer:
@@ -152,8 +153,8 @@ class AudioEnhancer:
             # Load audio
             wav, sr = torchaudio.load(temp_input_wav)
 
-            # Convert to model format (downsamples to 16kHz)
-            print(f"    Denoising with {self.model_name}...")
+            # AI denoising
+            print(f"    AI denoising with {self.model_name}...")
             wav_model = convert_audio(wav, sr, self.model.sample_rate, self.model.chin)
             wav_model = wav_model.unsqueeze(0)
 
@@ -300,7 +301,7 @@ class AudioEnhancer:
             apply_loudnorm: Apply loudness normalization
         """
         print("=" * 70)
-        print("  🎵 Audio Enhancement Script - Maximum Quality Settings")
+        print("  🎵 Audio Enhancement Script - Professional Quality")
         print("=" * 70)
 
         # Setup
@@ -382,10 +383,10 @@ class AudioEnhancer:
 
         print("\n" + "=" * 70)
         print(f"Settings used:")
-        print(f"  Model: {self.model_name}")
+        print(f"  AI Model: {self.model_name}")
         print(f"  Sample rate: Preserved from original")
         print(f"  Bitrate: {'256 kbps (M4A) / 320 kbps (MP3)' if high_bitrate else '128 kbps (M4A) / 192 kbps (MP3)'}")
-        print(f"  Audio filters: {'adeclick + loudnorm' if apply_loudnorm else 'None (denoising only)'}")
+        print(f"  Audio filters: {'adeclick + loudnorm' if apply_loudnorm else 'None'}")
         print(f"  Filename suffix: '{suffix}' {'(original name)' if suffix == '' else ''}")
         print("=" * 70)
 
