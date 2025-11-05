@@ -30,7 +30,7 @@ class AudioEnhancer:
         self.model_name = model_name
         self.temp_dir = Path(temp_dir)
         self.model = None
-        self.supported_formats = ['.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac', '.mp4']
+        self.supported_formats = ['.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac', '.mp4', '.MP3']
 
     def setup_temp_dir(self):
         """Create temp directory if it doesn't exist"""
@@ -173,6 +173,9 @@ class AudioEnhancer:
             temp_output_wav = self.temp_dir / f"{output_path.stem}_output.wav"
             torchaudio.save(str(temp_output_wav), denoised.cpu(), original_sr)
 
+            # Build audio filter chain
+            filters = []
+
             # Apply audio filters: professional audio cleanup chain
             if apply_loudnorm:
                 print(f"    Applying professional audio cleanup...")
@@ -181,13 +184,18 @@ class AudioEnhancer:
                 print(f"      • agate: Gating quiet noise (breathing, room tone)")
                 print(f"      • speechnorm: Normalizing speech dynamics")
                 print(f"      • loudnorm: Final loudness normalization")
-                temp_normalized_wav = self.temp_dir / f"{output_path.stem}_normalized.wav"
 
-                # Apply full professional audio cleanup chain
-                # Order: adeclick → anlmdn → agate → speechnorm → loudnorm
+                # Order: silenceremove → adeclick → anlmdn → agate → speechnorm → loudnorm
+                filters.extend(['adeclick', 'anlmdn', 'agate', 'speechnorm', 'loudnorm'])
+
+            # Apply filters if any are enabled
+            if filters:
+                temp_normalized_wav = self.temp_dir / f"{output_path.stem}_normalized.wav"
+                filter_chain = ','.join(filters)
+
                 cmd = [
                     'ffmpeg', '-v', 'error', '-i', str(temp_output_wav),
-                    '-af', 'adeclick,anlmdn,agate,speechnorm,loudnorm',
+                    '-af', filter_chain,
                     str(temp_normalized_wav),
                     '-y'
                 ]
@@ -487,7 +495,7 @@ Examples:
         output_dir=args.output,
         high_bitrate=not args.low_bitrate,
         suffix=args.suffix,
-        apply_loudnorm=not args.no_loudnorm
+        apply_loudnorm=not args.no_loudnorm,
     )
 
 

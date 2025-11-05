@@ -13,24 +13,28 @@ python enhance_all_audios.py
 This tool provides professional-grade audio enhancement with a comprehensive processing chain:
 
 1. **AI Denoising** - Facebook Research's DNS64 model for speech enhancement
-2. **Click Removal** - Removes clicks and pops using adeclick filter
-3. **Reverb Removal** - Removes echo and reverb using anlmdn filter
-4. **Noise Gating** - Suppresses quiet noise (breathing, room tone) using agate filter
-5. **Speech Normalization** - Creates studio-quality dry voice using speechnorm filter
-6. **Volume Normalization** - Consistent loudness using loudnorm filter
-7. **Quality Preservation** - Maintains original sample rate and uses high bitrate encoding
+2. **Silence Trimming** - Removes blank spaces from start and end, keeping minimal delay
+3. **Click Removal** - Removes clicks and pops using adeclick filter
+4. **Reverb Removal** - Removes echo and reverb using anlmdn filter
+5. **Noise Gating** - Suppresses quiet noise (breathing, room tone) using agate filter
+6. **Speech Normalization** - Creates studio-quality dry voice using speechnorm filter
+7. **Volume Normalization** - Consistent loudness using loudnorm filter
+8. **Quality Preservation** - Maintains original sample rate and uses high bitrate encoding
 
 ## 📊 Results
 
 **Processing Time:** ~2 seconds per file
 
 **Quality:**
+
 - Sample Rate: Preserved (typically 48kHz)
 - Bitrate: 256 kbps (M4A) / 320 kbps (MP3)
 - Format: Preserved (M4A → M4A, MP3 → MP3, etc.)
 
 **Features Applied:**
+
 - ✅ AI denoising (Facebook DNS64)
+- ✅ Silence trimming (removes blank spaces)
 - ✅ Click/pop removal (adeclick)
 - ✅ Reverb/echo removal (anlmdn)
 - ✅ Noise gating (agate)
@@ -78,6 +82,7 @@ python enhance_all_audios.py --suffix _enhanced
 ## 🔧 Technical Details
 
 **AI Model:**
+
 - **Facebook DNS64** - Speech Enhancement
   - Processes at 16kHz for speech optimization
   - Trained on DNS Challenge dataset
@@ -85,6 +90,8 @@ python enhance_all_audios.py --suffix _enhanced
   - Upsamples back to original rate
 
 **Audio Filters:**
+
+- `silenceremove` - Trims blank spaces from start and end (keeps 0.1s padding)
 - `adeclick` - Removes clicks and pops
 - `anlmdn` - Removes reverb and echo (Audio Non-Local Means Denoiser)
 - `agate` - Gates quiet noise like breathing and room tone
@@ -92,6 +99,7 @@ python enhance_all_audios.py --suffix _enhanced
 - `loudnorm` - EBU R128 loudness normalization
 
 **Encoding:**
+
 - M4A: AAC 256 kbps, quality preset 2
 - MP3: LAME 320 kbps, quality preset 0
 - FLAC: Lossless, compression level 8
@@ -103,6 +111,7 @@ See **QUICK_START.md** for detailed usage examples and troubleshooting.
 ## 🎯 Use Cases
 
 Perfect for:
+
 - Voice recordings
 - Podcasts
 - Interviews
@@ -113,11 +122,13 @@ Perfect for:
 ## ⚡ Performance
 
 **System Requirements:**
+
 - Python 3.7+
 - ~500MB disk space (for models)
 - CPU or GPU (GPU faster but not required)
 
 **Processing Speed:**
+
 - Typical: 2-4 seconds per file (CPU)
 - Batch: Automatically processes all files
 - Temp cleanup: Automatic
