@@ -8,6 +8,17 @@ Professional audio enhancement using AI denoising and ffmpeg filters.
 python enhance_all_audios.py
 ```
 
+## 🌐 FastAPI Service
+
+Serve the enhancer as an API + Web UI:
+
+```bash
+pip install -r requirements.txt
+uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Then open [http://localhost:8000/](http://localhost:8000/) to upload audio archives, monitor job progress, and download enhanced outputs.
+
 ## 📋 What It Does
 
 This tool provides professional-grade audio enhancement with a comprehensive processing chain:

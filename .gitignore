@@ -1,3 +1,5 @@
 enhanced-audios
 original-audios
 .DS_Store
+.venv/
+__pycache__/

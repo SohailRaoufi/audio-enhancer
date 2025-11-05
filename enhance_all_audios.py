@@ -16,6 +16,18 @@ import shutil
 import time
 from datetime import datetime
 import sys
+from typing import Callable, Optional, Dict, Any
+
+
+def _emit_callback(callback: Optional[Callable[[Dict[str, Any]], None]], event: Dict[str, Any]):
+    """Safely invoke a progress callback if provided."""
+    if callback is None:
+        return
+    try:
+        callback(event)
+    except Exception:
+        # Callback errors should not interrupt processing; log and continue.
+        print(f"Warning: progress callback failed for event {event.get('type')}", file=sys.stderr)
 
 
 class AudioEnhancer:
@@ -30,7 +42,7 @@ class AudioEnhancer:
         self.model_name = model_name
         self.temp_dir = Path(temp_dir)
         self.model = None
-        self.supported_formats = ['.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac', '.mp4', '.MP3']
+        self.supported_formats = {'.wav', '.mp3', '.m4a', '.flac', '.ogg', '.aac', '.mp4'}
 
     def setup_temp_dir(self):
         """Create temp directory if it doesn't exist"""
@@ -116,7 +128,15 @@ class AudioEnhancer:
 
         return str(output_wav)
 
-    def enhance_audio(self, input_file, output_file, high_bitrate=True, apply_loudnorm=True):
+    def enhance_audio(
+        self,
+        input_file,
+        output_file,
+        high_bitrate=True,
+        apply_loudnorm=True,
+        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        relative_filename: Optional[str] = None,
+    ):
         """
         Enhance a single audio file with maximum quality
 
@@ -125,12 +145,15 @@ class AudioEnhancer:
             output_file: Output audio file path
             high_bitrate: Use high bitrate encoding (256 kbps for M4A, 320 kbps for MP3)
             apply_loudnorm: Apply loudness normalization as final step
+            progress_callback: Optional callable for progress events
+            relative_filename: Filename relative to the job root for reporting
 
         Returns:
             True if successful, False otherwise
         """
         input_path = Path(input_file)
         output_path = Path(output_file)
+        display_name = relative_filename if relative_filename else input_path.name
 
         if not input_path.exists():
             print(f"    ✗ File not found: {input_file}")
@@ -150,6 +173,13 @@ class AudioEnhancer:
             if temp_input_wav is None:
                 return False
 
+            _emit_callback(progress_callback, {
+                "type": "file_progress",
+                "filename": display_name,
+                "percent": 25,
+                "stage": "converted_to_wav"
+            })
+
             # Load audio
             wav, sr = torchaudio.load(temp_input_wav)
 
@@ -162,12 +192,26 @@ class AudioEnhancer:
             with torch.no_grad():
                 denoised = self.model(wav_model)[0]
 
+            _emit_callback(progress_callback, {
+                "type": "file_progress",
+                "filename": display_name,
+                "percent": 50,
+                "stage": "denoised"
+            })
+
             # Upsample back to original sample rate
             print(f"    Upsampling to {original_sr} Hz...")
             denoised = torchaudio.transforms.Resample(
                 orig_freq=self.model.sample_rate,
                 new_freq=original_sr
             )(denoised)
+
+            _emit_callback(progress_callback, {
+                "type": "file_progress",
+                "filename": display_name,
+                "percent": 75,
+                "stage": "resampled"
+            })
 
             # Save to temp WAV
             temp_output_wav = self.temp_dir / f"{output_path.stem}_output.wav"
@@ -247,6 +291,12 @@ class AudioEnhancer:
                 input_size = input_path.stat().st_size / (1024 * 1024)
                 output_size = output_path.stat().st_size / (1024 * 1024)
                 print(f"    ✓ Complete! {input_size:.2f} MB → {output_size:.2f} MB")
+                _emit_callback(progress_callback, {
+                    "type": "file_progress",
+                    "filename": display_name,
+                    "percent": 100,
+                    "stage": "completed"
+                })
                 return True
             else:
                 # Default to AAC
@@ -271,6 +321,12 @@ class AudioEnhancer:
             output_bitrate = int(output_info.get('bit_rate', 0)) // 1000
 
             print(f"    ✓ Complete! {input_size:.2f} MB → {output_size:.2f} MB ({output_bitrate} kbps)")
+            _emit_callback(progress_callback, {
+                "type": "file_progress",
+                "filename": display_name,
+                "percent": 100,
+                "stage": "completed"
+            })
 
             return True
 
@@ -285,26 +341,39 @@ class AudioEnhancer:
         input_path = Path(input_dir)
         audio_files = []
 
-        if recursive:
-            for ext in self.supported_formats:
-                audio_files.extend(input_path.rglob(f"*{ext}"))
-        else:
-            for ext in self.supported_formats:
-                audio_files.extend(input_path.glob(f"*{ext}"))
+        if not input_path.exists():
+            return []
 
-        # Filter out already enhanced files and temp files
-        audio_files = [
-            f for f in audio_files
-            if '_enhanced' not in f.stem.lower()
-            and '_hq' not in f.stem.lower()
-            and 'temp' not in f.stem.lower()
-            and f.parent.name != 'tmp'
-            and f.parent.name != 'enhanced-audios'
-        ]
+        candidates = input_path.rglob("*") if recursive else input_path.glob("*")
+        audio_files = []
+        for file_path in candidates:
+            if not file_path.is_file():
+                continue
+            suffix = file_path.suffix.lower()
+            if suffix not in self.supported_formats:
+                continue
+            if '_enhanced' in file_path.stem.lower():
+                continue
+            if '_hq' in file_path.stem.lower():
+                continue
+            if 'temp' in file_path.stem.lower():
+                continue
+            if file_path.parent.name in {'tmp', 'enhanced-audios'}:
+                continue
+            audio_files.append(file_path)
 
         return sorted(audio_files)
 
-    def process_all(self, input_dir, output_dir, high_bitrate=True, suffix="", apply_loudnorm=True):
+    def process_all(
+        self,
+        input_dir,
+        output_dir,
+        high_bitrate=True,
+        suffix="",
+        apply_loudnorm=True,
+        recursive=False,
+        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+    ):
         """
         Process all audio files in directory
 
@@ -314,6 +383,11 @@ class AudioEnhancer:
             high_bitrate: Use high bitrate encoding
             suffix: Suffix to add to output filenames (empty = keep original name)
             apply_loudnorm: Apply loudness normalization
+            recursive: Search subdirectories recursively
+            progress_callback: Optional callable for progress events
+
+        Returns:
+            Dict[str, list]: Success and failed filenames
         """
         print("=" * 70)
         print("  🎵 Audio Enhancement Script - Professional Quality")
@@ -330,13 +404,22 @@ class AudioEnhancer:
 
         # Find audio files
         print(f"Scanning for audio files in: {input_dir}")
-        audio_files = self.find_audio_files(input_dir)
+        audio_files = self.find_audio_files(input_dir, recursive=recursive)
 
         if not audio_files:
             print(f"\n✗ No audio files found!")
             print(f"  Supported formats: {', '.join(self.supported_formats)}")
             self.cleanup_temp_dir()
-            return
+            _emit_callback(progress_callback, {
+                "type": "file_completed",
+                "filename": None,
+                "success": False,
+                "reason": "no_audio_files_found"
+            })
+            return {
+                'success': [],
+                'failed': []
+            }
 
         print(f"✓ Found {len(audio_files)} audio file(s)\n")
 
@@ -345,6 +428,7 @@ class AudioEnhancer:
             'success': [],
             'failed': []
         }
+        total_files = len(audio_files)
 
         start_time = time.time()
 
@@ -356,19 +440,64 @@ class AudioEnhancer:
             output_filename = f"{audio_file.stem}{suffix}{audio_file.suffix}"
             output_file = output_path / output_filename
 
+            try:
+                relative_filename = str(audio_file.relative_to(Path(input_dir)))
+            except ValueError:
+                relative_filename = audio_file.name
+
+            _emit_callback(progress_callback, {
+                "type": "file_started",
+                "filename": relative_filename,
+                "index": i,
+                "total": total_files
+            })
+            _emit_callback(progress_callback, {
+                "type": "file_progress",
+                "filename": relative_filename,
+                "percent": 0,
+                "stage": "queued"
+            })
+
             # Skip if already exists
             if output_file.exists():
                 print(f"    ⚠ Already exists, skipping...")
                 results['failed'].append((audio_file.name, "Already exists"))
+                _emit_callback(progress_callback, {
+                    "type": "file_completed",
+                    "filename": relative_filename,
+                    "success": False,
+                    "reason": "already_exists",
+                    "output_file": str(output_file)
+                })
                 continue
 
             # Process
-            success = self.enhance_audio(audio_file, output_file, high_bitrate, apply_loudnorm)
+            success = self.enhance_audio(
+                audio_file,
+                output_file,
+                high_bitrate,
+                apply_loudnorm,
+                progress_callback=progress_callback,
+                relative_filename=relative_filename
+            )
 
             if success:
                 results['success'].append(audio_file.name)
+                _emit_callback(progress_callback, {
+                    "type": "file_completed",
+                    "filename": relative_filename,
+                    "success": True,
+                    "output_file": str(output_file)
+                })
             else:
                 results['failed'].append((audio_file.name, "Processing error"))
+                _emit_callback(progress_callback, {
+                    "type": "file_completed",
+                    "filename": relative_filename,
+                    "success": False,
+                    "reason": "processing_error",
+                    "output_file": str(output_file)
+                })
 
         # Cleanup
         print("\n" + "=" * 70)
@@ -404,6 +533,8 @@ class AudioEnhancer:
         print(f"  Audio filters: {'adeclick + anlmdn + agate + speechnorm + loudnorm' if apply_loudnorm else 'None'}")
         print(f"  Filename suffix: '{suffix}' {'(original name)' if suffix == '' else ''}")
         print("=" * 70)
+
+        return results
 
 
 def main():
@@ -496,6 +627,7 @@ Examples:
         high_bitrate=not args.low_bitrate,
         suffix=args.suffix,
         apply_loudnorm=not args.no_loudnorm,
+        recursive=args.recursive,
     )
 
 

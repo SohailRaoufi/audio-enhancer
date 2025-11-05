@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Audio Enhancer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --border: #dfe3eb;
+      --accent: #335cff;
+      --accent-soft: rgba(51, 92, 255, 0.08);
+      --text: #1f2430;
+      --muted: #6c7386;
+      --shadow: 0 14px 30px rgba(27, 35, 58, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+      display: grid;
+      gap: 2.5rem;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    header h1 {
+      font-size: 2.1rem;
+      margin: 0;
+      font-weight: 600;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
+    main {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      align-items: start;
+    }
+    .panel {
+      background: var(--panel);
+      padding: 2rem;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    section h2 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    form label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    form input[type="file"],
+    form input[type="text"],
+    form select {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.95rem;
+      background: #fbfcff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    form input[type="text"]:focus,
+    form select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .start-job form {
+      display: grid;
+      gap: 1.4rem;
+    }
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1.1rem;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fbfcff;
+    }
+    button.primary {
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), #233df4);
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 0.85rem 1.8rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      width: fit-content;
+    }
+    button.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(51, 92, 255, 0.25);
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 500;
+      width: fit-content;
+    }
+    progress {
+      width: 100%;
+      height: 1rem;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    progress::-webkit-progress-bar {
+      background-color: #f1f3f9;
+    }
+    progress::-webkit-progress-value {
+      background: linear-gradient(90deg, var(--accent), #4a6dff);
+    }
+    progress::-moz-progress-bar {
+      background: linear-gradient(90deg, var(--accent), #4a6dff);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+    tbody tr:nth-child(odd) td {
+      background: #f9fbff;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    #log {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.85rem;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 14px;
+      padding: 1rem;
+      max-height: 18rem;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    #download-area a,
+    .history-card a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: opacity 0.2s ease;
+    }
+    #download-area a:hover,
+    .history-card a:hover {
+      opacity: 0.85;
+    }
+    #download-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    .history-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.2rem;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      box-shadow: 0 10px 24px rgba(27, 35, 58, 0.07);
+    }
+    .history-card h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .history-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .empty-state {
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      background: #f7f9fe;
+    }
+    @media (max-width: 720px) {
+      .page { padding: 2.5rem 1.25rem 3rem; gap: 2rem; }
+      main { grid-template-columns: 1fr; }
+      .panel { padding: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Audio Enhancer Studio</h1>
+      <p>Upload your mix, track the enhancement live, and re-download any past project in one click.</p>
+    </header>
+
+    <main>
+      <section class="panel start-job">
+        <h2>Start a New Job</h2>
+        <form id="upload-form">
+          <label>
+            Audio ZIP
+            <input type="file" name="file" accept=".zip" required />
+          </label>
+
+          <div class="option-grid">
+            <label>
+              Model
+              <select name="model">
+                <option value="dns64">dns64 (balanced)</option>
+                <option value="dns48">dns48</option>
+                <option value="master64">master64 (premium)</option>
+              </select>
+            </label>
+
+            <label>
+              Output suffix
+              <input type="text" name="suffix" placeholder="_enhanced" />
+            </label>
+
+            <label>
+              Temp workspace
+              <input type="text" name="temp_dir" value="tmp" />
+            </label>
+          </div>
+
+          <div class="option-grid">
+            <label class="toggle">
+              <input type="checkbox" name="low_bitrate" />
+              Low bitrate (smaller files)
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="recursive" />
+              Include subfolders
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="no_loudnorm" />
+              Skip loudness polish
+            </label>
+          </div>
+
+          <button type="submit" class="primary">Upload &amp; Enhance</button>
+        </form>
+      </section>
+
+      <section class="panel" id="status-section" hidden>
+        <div class="status-header">
+          <h2>Live Progress</h2>
+          <span class="status-pill" id="job-status-pill">Queued</span>
+        </div>
+        <div>
+          <small>Job ID</small>
+          <div class="job-id" id="job-id"></div>
+        </div>
+        <progress id="job-progress" value="0" max="100"></progress>
+        <div id="download-area"></div>
+      </section>
+    </main>
+
+    <section class="panel" id="files-section" hidden>
+      <h2>Current Job Files</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Status</th>
+            <th>Percent</th>
+            <th>Stage</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="files-body"></tbody>
+      </table>
+    </section>
+
+    <section class="panel" id="log-section" hidden>
+      <h2>Activity Log</h2>
+      <div id="log"></div>
+    </section>
+
+    <section class="panel" id="history-section">
+      <h2>Previous Jobs</h2>
+      <div id="history-list" class="history-grid"></div>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById('upload-form');
+    const statusSection = document.getElementById('status-section');
+    const filesSection = document.getElementById('files-section');
+    const logSection = document.getElementById('log-section');
+    const historyList = document.getElementById('history-list');
+    const jobIdEl = document.getElementById('job-id');
+    const jobProgressEl = document.getElementById('job-progress');
+    const jobStatusPill = document.getElementById('job-status-pill');
+    const downloadArea = document.getElementById('download-area');
+    const filesBody = document.getElementById('files-body');
+    const logEl = document.getElementById('log');
+
+    let socket = null;
+    let currentJob = null;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.file.files.length) {
+        alert('Select a ZIP archive to upload.');
+        return;
+      }
+
+      const formData = new FormData(form);
+      formData.set('low_bitrate', form.low_bitrate.checked ? 'true' : 'false');
+      formData.set('recursive', form.recursive.checked ? 'true' : 'false');
+      formData.set('no_loudnorm', form.no_loudnorm.checked ? 'true' : 'false');
+
+      try {
+        const response = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({}));
+          throw new Error(errorBody.detail || 'Upload failed.');
+        }
+        const payload = await response.json();
+        startJob(payload);
+        await loadJobHistory();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    function startJob(payload) {
+      currentJob = {
+        id: payload.job_id,
+        wsUrl: payload.ws_url,
+        downloadUrl: payload.download_url,
+        files: {},
+      };
+
+      if (socket) {
+        socket.close();
+      }
+
+      jobIdEl.textContent = payload.job_id;
+      jobProgressEl.value = 0;
+      setStatus('Queued');
+      downloadArea.innerHTML = '';
+      statusSection.hidden = false;
+      filesSection.hidden = false;
+      logSection.hidden = false;
+      filesBody.innerHTML = '';
+      logEl.textContent = '';
+
+      socket = new WebSocket(payload.ws_url);
+      socket.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleEvent(data);
+        } catch (err) {
+          console.error('Invalid event payload', err);
+        }
+      });
+      socket.addEventListener('close', () => {
+        appendLog({ type: 'connection_closed', timestamp: new Date().toISOString() });
+      });
+    }
+
+    function handleEvent(event) {
+      appendLog(event);
+      switch (event.type) {
+        case 'job_started':
+          setStatus('Running');
+          break;
+        case 'file_started':
+          updateFile(event.filename, { status: 'Processing', percent: 0, stage: 'started' });
+          break;
+        case 'file_progress':
+          updateFile(event.filename, {
+            status: 'Processing',
+            percent: event.percent || 0,
+            stage: event.stage || 'processing',
+          });
+          break;
+        case 'file_completed':
+          updateFile(event.filename, {
+            status: event.success ? 'Completed' : 'Failed',
+            percent: event.success ? 100 : (currentJob.files[event.filename]?.percent || 0),
+            stage: 'completed',
+            output: event.output_file || '',
+            message: event.reason || '',
+          });
+          break;
+        case 'job_progress':
+          jobProgressEl.value = Math.round(event.percent || 0);
+          break;
+        case 'job_completed':
+          setStatus('Completed');
+          jobProgressEl.value = 100;
+          showDownloadLink();
+          loadJobHistory();
+          break;
+        case 'job_failed':
+          setStatus('Failed');
+          showDownloadLink();
+          loadJobHistory();
+          break;
+        default:
+          break;
+      }
+    }
+
+    function setStatus(label) {
+      jobStatusPill.textContent = label;
+      if (label === 'Failed') {
+        jobStatusPill.style.background = 'rgba(255, 99, 132, 0.12)';
+        jobStatusPill.style.color = '#dc3545';
+      } else if (label === 'Completed') {
+        jobStatusPill.style.background = 'rgba(34, 197, 94, 0.12)';
+        jobStatusPill.style.color = '#169c4b';
+      } else {
+        jobStatusPill.style.background = 'var(--accent-soft)';
+        jobStatusPill.style.color = 'var(--accent)';
+      }
+    }
+
+    function updateFile(filename, updates) {
+      if (!filename) {
+        return;
+      }
+      const info = currentJob.files[filename] || { status: 'Pending', percent: 0, stage: '', output: '', message: '' };
+      Object.assign(info, updates);
+      currentJob.files[filename] = info;
+
+      let row = Array.from(filesBody.querySelectorAll('tr')).find(r => r.dataset.filename === filename);
+      if (!row) {
+        row = document.createElement('tr');
+        row.dataset.filename = filename;
+        row.innerHTML = `
+          <td class="filename"></td>
+          <td class="status"></td>
+          <td class="percent"></td>
+          <td class="stage"></td>
+          <td class="details"></td>
+        `;
+        filesBody.appendChild(row);
+      }
+
+      row.querySelector('.filename').textContent = filename;
+      row.querySelector('.status').textContent = info.status;
+      row.querySelector('.percent').textContent = `${Math.round(info.percent || 0)}%`;
+      row.querySelector('.stage').textContent = info.stage || '';
+      row.querySelector('.details').textContent = info.output || info.message || '';
+    }
+
+    function appendLog(event) {
+      const ts = event.timestamp || new Date().toISOString();
+      logEl.textContent += `[${ts}] ${JSON.stringify(event)}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function showDownloadLink() {
+      downloadArea.innerHTML = `<a href="${currentJob.downloadUrl}" target="_blank" rel="noopener">Download enhanced audios</a>`;
+    }
+
+    async function loadJobHistory() {
+      try {
+        const response = await fetch('/api/jobs');
+        if (!response.ok) throw new Error('Unable to load history.');
+        const payload = await response.json();
+        renderHistory(payload.jobs || []);
+      } catch (err) {
+        historyList.innerHTML = `<div class="empty-state">History unavailable right now.</div>`;
+      }
+    }
+
+    function renderHistory(jobs) {
+      if (!jobs.length) {
+        historyList.innerHTML = `<div class="empty-state">No finished jobs yet. Upload a ZIP to get started.</div>`;
+        return;
+      }
+
+      historyList.innerHTML = '';
+      jobs.forEach((job) => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.innerHTML = `
+          <h3>${job.archive_name || job.job_id}</h3>
+          <div class="history-meta">
+            <span>Status: <strong>${job.status || 'unknown'}</strong></span>
+            <span>Created: ${formatDate(job.created_at)}</span>
+            <span>Completed: ${formatDate(job.completed_at)}</span>
+            <span>Files: ${job.processed_files ?? 0}/${job.total_files ?? 0}</span>
+            <span class="job-id-ref">Job ID: ${job.job_id}</span>
+          </div>
+          <div>
+            <a href="${job.download_url}" target="_blank" rel="noopener">Download ZIP</a>
+          </div>
+        `;
+        historyList.appendChild(card);
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString();
+    }
+
+    loadJobHistory();
+  </script>
+</body>
+</html>
