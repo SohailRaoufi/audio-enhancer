@@ -173,15 +173,21 @@ class AudioEnhancer:
             temp_output_wav = self.temp_dir / f"{output_path.stem}_output.wav"
             torchaudio.save(str(temp_output_wav), denoised.cpu(), original_sr)
 
-            # Apply audio filters: adeclick + loudness normalization
+            # Apply audio filters: professional audio cleanup chain
             if apply_loudnorm:
-                print(f"    Applying audio cleanup (adeclick + loudnorm)...")
+                print(f"    Applying professional audio cleanup...")
+                print(f"      • adeclick: Removing clicks and pops")
+                print(f"      • anlmdn: Removing reverb and echo")
+                print(f"      • agate: Gating quiet noise (breathing, room tone)")
+                print(f"      • speechnorm: Normalizing speech dynamics")
+                print(f"      • loudnorm: Final loudness normalization")
                 temp_normalized_wav = self.temp_dir / f"{output_path.stem}_normalized.wav"
 
-                # Apply adeclick (removes clicks/pops) and loudnorm (volume normalization)
+                # Apply full professional audio cleanup chain
+                # Order: adeclick → anlmdn → agate → speechnorm → loudnorm
                 cmd = [
                     'ffmpeg', '-v', 'error', '-i', str(temp_output_wav),
-                    '-af', 'adeclick,loudnorm',
+                    '-af', 'adeclick,anlmdn,agate,speechnorm,loudnorm',
                     str(temp_normalized_wav),
                     '-y'
                 ]
@@ -191,7 +197,8 @@ class AudioEnhancer:
                     # Use normalized version
                     temp_output_wav = temp_normalized_wav
                 else:
-                    print(f"    ⚠ Audio cleanup failed, using basic denoised audio")
+                    print(f"    ⚠ Audio cleanup failed: {result.stderr}")
+                    print(f"    ⚠ Using basic denoised audio")
 
             # Determine output format
             output_format = output_path.suffix.lower()
@@ -386,7 +393,7 @@ class AudioEnhancer:
         print(f"  AI Model: {self.model_name}")
         print(f"  Sample rate: Preserved from original")
         print(f"  Bitrate: {'256 kbps (M4A) / 320 kbps (MP3)' if high_bitrate else '128 kbps (M4A) / 192 kbps (MP3)'}")
-        print(f"  Audio filters: {'adeclick + loudnorm' if apply_loudnorm else 'None'}")
+        print(f"  Audio filters: {'adeclick + anlmdn + agate + speechnorm + loudnorm' if apply_loudnorm else 'None'}")
         print(f"  Filename suffix: '{suffix}' {'(original name)' if suffix == '' else ''}")
         print("=" * 70)
 

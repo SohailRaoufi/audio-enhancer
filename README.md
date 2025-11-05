@@ -10,12 +10,15 @@ python enhance_all_audios.py
 
 ## 📋 What It Does
 
-This tool provides professional-grade audio enhancement:
+This tool provides professional-grade audio enhancement with a comprehensive processing chain:
 
 1. **AI Denoising** - Facebook Research's DNS64 model for speech enhancement
 2. **Click Removal** - Removes clicks and pops using adeclick filter
-3. **Volume Normalization** - Consistent loudness using loudnorm filter
-4. **Quality Preservation** - Maintains original sample rate and uses high bitrate encoding
+3. **Reverb Removal** - Removes echo and reverb using anlmdn filter
+4. **Noise Gating** - Suppresses quiet noise (breathing, room tone) using agate filter
+5. **Speech Normalization** - Creates studio-quality dry voice using speechnorm filter
+6. **Volume Normalization** - Consistent loudness using loudnorm filter
+7. **Quality Preservation** - Maintains original sample rate and uses high bitrate encoding
 
 ## 📊 Results
 
@@ -29,6 +32,9 @@ This tool provides professional-grade audio enhancement:
 **Features Applied:**
 - ✅ AI denoising (Facebook DNS64)
 - ✅ Click/pop removal (adeclick)
+- ✅ Reverb/echo removal (anlmdn)
+- ✅ Noise gating (agate)
+- ✅ Speech normalization (speechnorm)
 - ✅ Volume normalization (loudnorm)
 - ✅ High-quality encoding
 
@@ -80,6 +86,9 @@ python enhance_all_audios.py --suffix _enhanced
 
 **Audio Filters:**
 - `adeclick` - Removes clicks and pops
+- `anlmdn` - Removes reverb and echo (Audio Non-Local Means Denoiser)
+- `agate` - Gates quiet noise like breathing and room tone
+- `speechnorm` - Normalizes speech dynamics for studio-quality dry voice
 - `loudnorm` - EBU R128 loudness normalization
 
 **Encoding:**

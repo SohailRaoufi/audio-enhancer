@@ -12,7 +12,10 @@ That's it! This single command will:
 - ✅ Preserve original sample rate (48kHz)
 - ✅ Use high bitrate encoding (256 kbps)
 - ✅ Remove clicks and pops (adeclick filter)
-- ✅ Apply loudness normalization (consistent volume)
+- ✅ Remove reverb and echo (anlmdn filter)
+- ✅ Gate quiet noise like breathing (agate filter)
+- ✅ Normalize speech dynamics for studio sound (speechnorm filter)
+- ✅ Apply loudness normalization (loudnorm filter)
 - ✅ Save to `enhanced-audios/` with **original filename** (no suffix)
 - ✅ Use `tmp/` folder for conversions (auto-cleaned)
 - ✅ Skip already processed files
@@ -114,9 +117,12 @@ python enhance_all_audios.py --recursive
 3. **AI denoising** → Facebook DNS64 at 16kHz
 4. **Upsample to original rate** → Restore to 48kHz
 5. **Remove clicks/pops** → Apply adeclick filter
-6. **Normalize volume** → Apply loudnorm for consistent loudness
-7. **Encode with high quality** → Create final output (256 kbps)
-8. **Clean up temp files** → Remove `tmp/` files automatically
+6. **Remove reverb/echo** → Apply anlmdn filter
+7. **Gate quiet noise** → Apply agate filter (breathing, room tone)
+8. **Normalize speech** → Apply speechnorm filter (studio-quality dry voice)
+9. **Normalize volume** → Apply loudnorm for consistent loudness
+10. **Encode with high quality** → Create final output (256 kbps)
+11. **Clean up temp files** → Remove `tmp/` files automatically
 
 ---
 
@@ -132,6 +138,9 @@ Successfully processed **2 files** in **~4 seconds**:
 All files receive:
 - ✅ AI denoising (Facebook DNS64)
 - ✅ Clicks/pops removed (adeclick)
+- ✅ Reverb/echo removed (anlmdn)
+- ✅ Quiet noise gated (agate)
+- ✅ Speech normalized (speechnorm)
 - ✅ Volume normalized (loudnorm)
 - ✅ Quality preserved (48kHz)
 - ✅ Original filename kept
@@ -227,12 +236,15 @@ Done! 🎵
 1. ✅ **AI Denoising** - Facebook DNS64 (best quality)
 2. ✅ **Original Filename** - No suffix (keeps original name)
 3. ✅ **Adeclick Filter** - Removes clicks and pops from audio
-4. ✅ **Loudness Normalization** - Consistent volume using ffmpeg loudnorm
-5. ✅ **Professional Quality** - Broadcast-ready audio output
+4. ✅ **Anlmdn Filter** - Removes reverb and echo
+5. ✅ **Agate Filter** - Gates quiet noise like breathing and room tone
+6. ✅ **Speechnorm Filter** - Normalizes speech dynamics for studio sound
+7. ✅ **Loudness Normalization** - Consistent volume using ffmpeg loudnorm
+8. ✅ **Professional Quality** - Broadcast-ready audio output
 
 ### Processing Pipeline:
 ```
-Original Audio (noisy, clicks, varying volume)
+Original Audio (noisy, clicks, reverb, varying volume)
     ↓
 AI Denoising (Facebook DNS64 at 16kHz)
     ↓
@@ -240,9 +252,15 @@ Upsample (restore to 48kHz)
     ↓
 Adeclick (remove clicks and pops)
     ↓
+Anlmdn (remove reverb and echo)
+    ↓
+Agate (gate quiet noise - breathing, room tone)
+    ↓
+Speechnorm (normalize speech dynamics for studio sound)
+    ↓
 Loudnorm (normalize volume to broadcast standards)
     ↓
 High-quality encoding (AAC 256 kbps)
     ↓
-Enhanced Audio (clean, smooth, professional)
+Enhanced Audio (clean, smooth, professional, studio-quality)
 ```
