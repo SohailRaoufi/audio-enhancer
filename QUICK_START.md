@@ -11,6 +11,7 @@ That's it! This single command will:
 - ✅ Enhance them with maximum quality (dns64 model)
 - ✅ Preserve original sample rate (48kHz)
 - ✅ Use high bitrate encoding (256 kbps)
+- ✅ Remove clicks and pops (adeclick filter)
 - ✅ Apply loudness normalization (consistent volume)
 - ✅ Save to `enhanced-audios/` with **original filename** (no suffix)
 - ✅ Use `tmp/` folder for conversions (auto-cleaned)
@@ -73,9 +74,9 @@ python enhance_all_audios.py --suffix _enhanced
 python enhance_all_audios.py
 ```
 
-### Skip Loudness Normalization
+### Skip Audio Cleanup Filters
 ```bash
-# Don't apply loudness normalization (if you want to do it manually)
+# Don't apply adeclick and loudnorm filters (denoising only)
 python enhance_all_audios.py --no-loudnorm
 ```
 
@@ -110,11 +111,12 @@ python enhance_all_audios.py --recursive
 
 1. **Load original audio** → Detect format and sample rate
 2. **Convert to WAV** → Store in `tmp/` folder
-3. **Denoise at 16kHz** → AI model removes noise
-4. **Upsample to original rate** → Restore full frequency range
-5. **Apply loudness normalization** → Consistent volume using ffmpeg loudnorm
-6. **Encode with high quality** → Create final output
-7. **Clean up temp files** → Remove `tmp/` files
+3. **Denoise at 16kHz** → AI model removes background noise
+4. **Upsample to original rate** → Restore full frequency range (48kHz)
+5. **Remove clicks/pops** → Apply adeclick filter
+6. **Normalize volume** → Apply loudnorm for consistent loudness
+7. **Encode with high quality** → Create final output (256 kbps)
+8. **Clean up temp files** → Remove `tmp/` files automatically
 
 ---
 
@@ -124,14 +126,14 @@ Successfully processed **2 files** in **3.6 seconds**:
 
 | File | Original | Enhanced | Quality | Features |
 |------|----------|----------|---------|----------|
-| 47-53 page Dari 22th lesson.m4a | 0.21 MB | 0.52 MB | 48kHz, 168kbps | ✅ Denoised + Loudnorm |
-| New Recording 602.m4a | 0.06 MB | 0.14 MB | 48kHz, 172kbps | ✅ Denoised + Loudnorm |
+| 47-53 page Dari 22th lesson.m4a | 0.21 MB | 0.52 MB | 48kHz, 168kbps | ✅ Full cleanup |
+| New Recording 602.m4a | 0.06 MB | 0.14 MB | 48kHz, 172kbps | ✅ Full cleanup |
 
-All files:
-- ✅ Noise removed
-- ✅ Quality preserved
-- ✅ Sample rate maintained (48kHz)
-- ✅ Volume normalized
+All files receive:
+- ✅ Background noise removed (AI denoising)
+- ✅ Clicks/pops removed (adeclick)
+- ✅ Volume normalized (loudnorm)
+- ✅ Quality preserved (48kHz)
 - ✅ Original filename kept
 
 ---
@@ -222,22 +224,25 @@ Done! 🎵
 ## 📝 What's New
 
 ### Latest Updates:
-1. ✅ **Original Filename** - No more `_HQ` suffix (keeps original name)
-2. ✅ **Loudness Normalization** - Consistent volume using ffmpeg loudnorm filter
-3. ✅ **Better Quality** - Enhanced audio is now normalized for professional sound
-4. ✅ **Cleaner Output** - Files have same name, just cleaner audio
+1. ✅ **Original Filename** - No suffix (keeps original name)
+2. ✅ **Adeclick Filter** - Removes clicks and pops from audio
+3. ✅ **Loudness Normalization** - Consistent volume using ffmpeg loudnorm
+4. ✅ **Professional Quality** - Broadcast-ready audio output
+5. ✅ **Clean Output** - Files have same name, just cleaner audio
 
 ### Processing Pipeline:
 ```
-Original Audio (noisy, varying volume)
+Original Audio (noisy, clicks, varying volume)
     ↓
-Denoise with AI (remove background noise)
+AI Denoising (remove background noise at 16kHz)
     ↓
-Upsample to original rate (preserve quality)
+Upsample (restore to 48kHz - preserve quality)
     ↓
-Loudness Normalization (consistent volume)
+Adeclick (remove clicks and pops)
     ↓
-High-quality encoding (256 kbps)
+Loudnorm (normalize volume to broadcast standards)
     ↓
-Enhanced Audio (clean, normalized, high quality)
+High-quality encoding (AAC 256 kbps)
+    ↓
+Enhanced Audio (clean, smooth, professional)
 ```

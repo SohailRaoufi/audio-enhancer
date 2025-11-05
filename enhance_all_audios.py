@@ -172,14 +172,15 @@ class AudioEnhancer:
             temp_output_wav = self.temp_dir / f"{output_path.stem}_output.wav"
             torchaudio.save(str(temp_output_wav), denoised.cpu(), original_sr)
 
-            # Apply loudness normalization with ffmpeg
+            # Apply audio filters: adeclick + loudness normalization
             if apply_loudnorm:
-                print(f"    Applying loudness normalization...")
+                print(f"    Applying audio cleanup (adeclick + loudnorm)...")
                 temp_normalized_wav = self.temp_dir / f"{output_path.stem}_normalized.wav"
 
+                # Apply adeclick (removes clicks/pops) and loudnorm (volume normalization)
                 cmd = [
                     'ffmpeg', '-v', 'error', '-i', str(temp_output_wav),
-                    '-af', 'loudnorm',
+                    '-af', 'adeclick,loudnorm',
                     str(temp_normalized_wav),
                     '-y'
                 ]
@@ -189,7 +190,7 @@ class AudioEnhancer:
                     # Use normalized version
                     temp_output_wav = temp_normalized_wav
                 else:
-                    print(f"    ⚠ Loudnorm failed, using non-normalized audio")
+                    print(f"    ⚠ Audio cleanup failed, using basic denoised audio")
 
             # Determine output format
             output_format = output_path.suffix.lower()
@@ -384,7 +385,7 @@ class AudioEnhancer:
         print(f"  Model: {self.model_name}")
         print(f"  Sample rate: Preserved from original")
         print(f"  Bitrate: {'256 kbps (M4A) / 320 kbps (MP3)' if high_bitrate else '128 kbps (M4A) / 192 kbps (MP3)'}")
-        print(f"  Loudness normalization: {'Enabled' if apply_loudnorm else 'Disabled'}")
+        print(f"  Audio filters: {'adeclick + loudnorm' if apply_loudnorm else 'None (denoising only)'}")
         print(f"  Filename suffix: '{suffix}' {'(original name)' if suffix == '' else ''}")
         print("=" * 70)
 
@@ -410,7 +411,7 @@ Examples:
   # Custom suffix for output files
   python enhance_all_audios.py --suffix _enhanced
 
-  # Skip loudness normalization
+  # Skip audio cleanup filters (adeclick, loudnorm)
   python enhance_all_audios.py --no-loudnorm
         """
     )
@@ -461,7 +462,7 @@ Examples:
     parser.add_argument(
         '--no-loudnorm',
         action='store_true',
-        help='Skip loudness normalization step'
+        help='Skip audio cleanup filters (adeclick and loudnorm)'
     )
 
     args = parser.parse_args()
