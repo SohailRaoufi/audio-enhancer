@@ -6,6 +6,8 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List
 import zipfile
+import uvicorn
+
 
 import aiofiles
 from fastapi import (
@@ -83,6 +85,10 @@ def safe_extract_zip(zip_path: Path, extract_to: Path) -> List[str]:
             target_path.parent.mkdir(parents=True, exist_ok=True)
             with archive.open(member) as source, open(target_path, "wb") as dest:
                 shutil.copyfileobj(source, dest)
+
+            # Exclude macOS metadata files from root_segments
+            if member_path.name.startswith("._") or member_path.name in {".DS_Store", "Thumbs.db"}:
+                continue
 
             extracted.append(str(target_path.relative_to(extract_to)))
 
@@ -341,3 +347,7 @@ async def job_progress_ws(websocket: WebSocket, job_id: str) -> None:
         if job is not None:
             job_manager.unsubscribe(job_id, queue)
         raise
+
+
+if __name__ == "__main__":
+    uvicorn.run("server:app", host="0.0.0.0", port=8000)

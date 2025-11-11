@@ -337,7 +337,7 @@ class AudioEnhancer:
             return False
 
     def find_audio_files(self, input_dir, recursive=False):
-        """Find all audio files in directory"""
+        """Find all audio files in directory, excluding macOS metadata files."""
         input_path = Path(input_dir)
         audio_files = []
 
@@ -359,6 +359,9 @@ class AudioEnhancer:
             if 'temp' in file_path.stem.lower():
                 continue
             if file_path.parent.name in {'tmp', 'enhanced-audios'}:
+                continue
+            # Exclude macOS metadata files
+            if file_path.name.startswith("._") or file_path.name in {".DS_Store", "Thumbs.db"}:
                 continue
             audio_files.append(file_path)
 
